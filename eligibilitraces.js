@@ -3,11 +3,11 @@
 pixScale = 5;
 var xPix = 13 *pixScale;
 var yPix = 7  *pixScale;
-var alpha = 0.1; // alpha is ml for learning update rate
+var alpha = 0.05; // alpha is ml for learning update rate
 var gamma = 0.99; // gamma is ml for future is fuzzy coefficient
 var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 			// that influinced current reward... Thats a mouthful.
-var jadedness = 0.001; // jadedness is the amount the agent needs to be surprised before it will update value functions
+var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
 var stepsBetweenDraw = 100;
 
@@ -47,7 +47,10 @@ function start(){
 		}else{
 			if(agentLocation[0]>0) agentLocation[0]--;
 		}
-		if(agentLocation[0]==goalLocation[0] && agentLocation[1]==goalLocation[1]){
+		if(agentLocation[0]==goalLocation1[0] && agentLocation[1]==goalLocation1[1]){// ahh this is not how to do multiple goals go home and sleep!
+			agentLocation=[0,0];
+			return 1;
+		}else if(agentLocation[0]==goalLocation2[0] && agentLocation[1]==goalLocation2[1]){
 			agentLocation=[0,0];
 			return 1;
 		}else{
@@ -77,7 +80,8 @@ function start(){
 	// logic setup
 	var stepcount = 0;
 	var agentLocation = [0,0];
-	var goalLocation = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
+	var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
+	var goalLocation2 = [xPix-2,0];// psst, don't tell the agent we hard coded this.
 	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1+Math.random()));
 	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 2));
 	var nActions = 4;
@@ -119,7 +123,8 @@ function start(){
 		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
 		// Draw goal
 		gridContext.fillStyle="#090"
-		gridContext.fillRect(goalLocation[0]*pixWidth, goalLocation[1]*pixHeight, pixWidth, pixHeight);
+		gridContext.fillRect(goalLocation1[0]*pixWidth, goalLocation1[1]*pixHeight, pixWidth, pixHeight);
+		gridContext.fillRect(goalLocation2[0]*pixWidth, goalLocation2[1]*pixHeight, pixWidth, pixHeight);
 		// Draw valueFunction
 		for (x=0;x<xPix;x++){
 			for (y=0;y<yPix;y++){
