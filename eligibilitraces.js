@@ -1,6 +1,6 @@
 
 // keep as multiples of 13 and 7 cause pretty.
-pixScale = 5;
+pixScale = 3;
 var xPix = 13 *pixScale;
 var yPix = 7  *pixScale;
 var alpha = 0.05; // alpha is ml for learning update rate
@@ -9,7 +9,7 @@ var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 			// that influinced current reward... Thats a mouthful.
 var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
-var stepsBetweenDraw = 100;
+var stepsBetweenDraw = 50;
 
 var toggle;
 var agent;
@@ -82,7 +82,7 @@ function start(){
 	var agentLocation = [0,0];
 	var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
 	var goalLocation2 = [xPix-2,0];// psst, don't tell the agent we hard coded this.
-	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1+Math.random()));
+	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
 	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 2));
 	var nActions = 4;
 	var policy = Array(xPix).fill().map(x => Array(yPix).fill().map(x => Array(nActions).fill(1/nActions)));
@@ -193,6 +193,7 @@ function start(){
 		}
 		if(running) setTimeout(continueLogic, 50);
 	}
+	draw();
 	//continueLogic();
 }
 
