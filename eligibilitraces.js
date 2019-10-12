@@ -1,13 +1,22 @@
 
 // keep as multiples of 13 and 7 cause pretty.
-pixScale = 3;
+pixScale = 5;
 var xPix = 13 *pixScale;
 var yPix = 7  *pixScale;
+var alpha = 0.1; // alpha is ml for learning update rate
+var gamma = 0.99; // gamma is ml for future is fuzzy coefficient
+var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
+			// that influinced current reward... Thats a mouthful.
+var jadedness = 0.001; // jadedness is the amount the agent needs to be surprised before it will update value functions
+				// I made this up. It's not a real ml thing.
+var stepsBetweenDraw = 100;
 
 var toggle;
 var agent;
 var valueFunction;
 
+var imgTailLength = 200;
+var logicTailLength = 20;
 
 function start(){
 	// canvas setup
@@ -47,13 +56,33 @@ function start(){
 
 	}
 
+	function probabilityNormalizer(probs){
+
+		//probs = probs.map(x => Math.pow(x,10)); // power is heavy
+
+		max = probs.reduce((a,b)=> a>b?a:b);
+		probs = probs.map(x => max + 0.000001 - x);// <-- This parameter is important
+		probs = probs.map(x => 1 / x);
+
+		//min = probs.reduce((a,b)=>a>b?b:a);
+		//probs = probs.map(x => x-min);
+
+		//normalize to p mass = 1
+		sum = probs.reduce((a,b)=> a+b,0);
+		probs = probs.map(x => x/sum);
+		return probs
+	}
+	
+
 	// logic setup
 	var stepcount = 0;
 	var agentLocation = [0,0];
 	var goalLocation = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
-	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1+Math.random()));
+	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1+Math.random()));
+	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 2));
 	var nActions = 4;
 	var policy = Array(xPix).fill().map(x => Array(yPix).fill().map(x => Array(nActions).fill(1/nActions)));
+
 	agent = {};
 	agent.eligibilityQueue = [agentLocation.slice()];
 	agent.choose = function(agentLocation){//I get the feeling that passing an agent it's own location is incorrect data modeling.
@@ -75,10 +104,10 @@ function start(){
 				if( x < xPix-1) moves.push(valueFunction[x+1][y]); else moves.push(0);
 				if( y < yPix-1) moves.push(valueFunction[x][y+1]); else moves.push(0);
 				if( x > 0) moves.push(valueFunction[x-1][y]); else moves.push(0);
-				total_value = moves.reduce((a, b) => a + b, 0);//sum
-				for (a=0;a<nActions;a++){ // the agent will immediately stop trying to move out of bounds.
-					policy[x][y][a] = moves[a] / total_value;valueFunction[x][y-1];
-	}	}	}	}
+				policy[x][y] = probabilityNormalizer(moves);
+			}
+		}
+	}
 	agent.policyUpdate();
 	//
 	function draw() {
@@ -125,22 +154,41 @@ function start(){
 	}
 	function continueLogic() {
 		stepcount++;
-		for(ii=0;ii<10;ii++) {
-			//let action = policy.chooseAction(agentLocation);
-			//env.step(action);
+		draw();
+		for(ii=0;ii<stepsBetweenDraw +stepsBetweenDraw*Math.random();ii++) {
+			oldX=agentLocation[0];
+			oldY=agentLocation[1];
 			roll = Math.random();
 			action = agent.choose(agentLocation);
-			if(stepcount%100==10) console.log(action);
+			//if(stepcount%100==10) console.log(action);
 			reward = env.step(action);
-
-			agent.eligibilityQueue.push(agentLocation.slice());
-			if(agent.eligibilityQueue.length > 213) agent.eligibilityQueue.shift();
+			newX=agentLocation[0];
+			newY=agentLocation[1];
+			surprise = reward + gamma*valueFunction[newX][newY] - valueFunction[oldX][oldY];// a surprise can be positive or negative.
+			if (Math.abs(surprise) > jadedness) {
+				eligibility = 1;
+				for (jj=agent.eligibilityQueue.length-1; !(jj<0 || jj<agent.eligibilityQueue.length-logicTailLength); jj--){
+					x = agent.eligibilityQueue[jj][0];
+					y = agent.eligibilityQueue[jj][1];
+					valueFunction[x][y] = valueFunction[x][y] + alpha * surprise * eligibility;
+					eligibility = gamma * lambda * eligibility;
+				}
+				agent.policyUpdate();
+			}
+			// remove old eligibilities of state if already in eligibilityQueue
+			for(jj=agent.eligibilityQueue.length-1; jj>=0; jj--){
+				if (agent.eligibilityQueue[jj][0] == newX
+					&& agent.eligibilityQueue[jj][1] == newY){
+					agent.eligibilityQueue.splice(jj, 1);
+				}
+			}
+			agent.eligibilityQueue.push([newX,newY]);
+			if((agent.eligibilityQueue.length > imgTailLength) || (stepcount%4 ==0 && agent.eligibilityQueue.length>1)) agent.eligibilityQueue.shift();
 			if(reward) console.log("Yay");
 		}
-		draw();
-		if(running) setTimeout(continueLogic, 100);
+		if(running) setTimeout(continueLogic, 50);
 	}
-	continueLogic();
+	//continueLogic();
 }
 
 //document.addEventListener("load", start);// I don't work.
