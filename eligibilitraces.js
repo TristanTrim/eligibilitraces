@@ -52,17 +52,6 @@ function initialize(){
 
 	var env = {}
 	env.step = function (choice) {
-		//let roll = Math.random();
-		roll = choice/4;
-		if(roll<0.25){
-			if(agentLocation[1]>0) agentLocation[1]--;
-		}else if(roll<.5){
-			if(agentLocation[0]<xPix-1) agentLocation[0]++;
-		}else if(roll<.75){
-			if(agentLocation[1]<yPix-1) agentLocation[1]++;
-		}else{
-			if(agentLocation[0]>0) agentLocation[0]--;
-		}
 		if(agentLocation[0]==goalLocation1[0] && agentLocation[1]==goalLocation1[1]){// ahh this is not how to do multiple goals go home and sleep!
 			agentLocation=[0,0];
 			return 1;
@@ -70,6 +59,17 @@ function initialize(){
 			agentLocation=[0,0];
 			return 1;
 		}else{
+			//let roll = Math.random();
+			roll = choice/4;
+			if(roll<0.25){
+				if(agentLocation[1]>0) agentLocation[1]--;
+			}else if(roll<.5){
+				if(agentLocation[0]<xPix-1) agentLocation[0]++;
+			}else if(roll<.75){
+				if(agentLocation[1]<yPix-1) agentLocation[1]++;
+			}else{
+				if(agentLocation[0]>0) agentLocation[0]--;
+			}
 			return 0;
 		}
 
@@ -167,15 +167,7 @@ function initialize(){
 		}
 
 	}
-
-	var running = false;
-	toggle = function (){
-		running=!running;
-		if(running) continueLogic();
-	}
-	function continueLogic() {
-		stepcount++;
-		draw();
+	function logicUpdate() {
 		for(ii=0;ii<stepsBetweenDraw + skinnerbox*stepsBetweenDraw*Math.random();ii++) {
 			oldX=agentLocation[0];
 			oldY=agentLocation[1];
@@ -207,6 +199,19 @@ function initialize(){
 			if((agent.eligibilityQueue.length > imgTailLength) || (stepcount%4 ==0 && agent.eligibilityQueue.length>1)) agent.eligibilityQueue.shift();
 			if(reward) console.log("Yay");
 		}
+	}
+
+	var running = false;
+	toggle = function (){
+		running=!running;
+		if(running) continueLogic();
+	}
+
+	// Main loop! Get outta here async programming!
+	function continueLogic() {
+		stepcount++;
+		draw();
+		logicUpdate();
 		if(running) setTimeout(continueLogic, delayBetweenSteps);
 	}
 	draw();
