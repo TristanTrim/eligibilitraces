@@ -145,7 +145,7 @@ function initialize(){
 		// Draw valueFunction
 		for (x=0;x<xPix;x++){
 			for (y=0;y<yPix;y++){
-				+x+y+valueFunction[x][y];
+				//+x+y+valueFunction[x][y];// whaaa?
 				valueContext.fillStyle = 
 					`rgb(
 						0,
