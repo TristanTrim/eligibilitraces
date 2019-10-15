@@ -9,7 +9,9 @@ var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 			// that influinced current reward... Thats a mouthful.
 var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
-var stepsBetweenDraw = 50;
+var stepsBetweenDraw = 10;
+var delayBetweenSteps = 0;
+var skinnerbox = 1;
 
 var toggle;
 var agent;
@@ -18,7 +20,7 @@ var valueFunction;
 var imgTailLength = 200;
 var logicTailLength = 20;
 
-function start(){
+function initialize(){
 	// canvas setup
 	var valueCanvas = document.getElementById("valueCanvas");
 	var valueContext = valueCanvas.getContext("2d");
@@ -33,6 +35,20 @@ function start(){
 	gridContext.fillStyle = "#000000";
 	pixWidth = valueCanvas.width/xPix;
 	pixHeight = valueCanvas.height/yPix;
+
+	simSpeedSlider = document.getElementById("SimSpeed");
+	simSpeedSlider.onclick = function(){
+		if (this.value > 50){
+			skinnerbox = 1;
+			stepsBetweenDraw = 5*(this.value-50);
+		}else{
+			skinnerbox = 0;
+			stepsBetweenDraw = 1;
+			delayBetweenSteps = 3*(50 - this.value);
+		}
+		console.log(stepsBetweenDraw,delayBetweenSteps);
+	}
+	simSpeedSlider.onclick();
 
 	var env = {}
 	env.step = function (choice) {
@@ -81,7 +97,7 @@ function start(){
 	var stepcount = 0;
 	var agentLocation = [0,0];
 	var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
-	var goalLocation2 = [xPix-2,0];// psst, don't tell the agent we hard coded this.
+	var goalLocation2 = [xPix-2,yPix-5];// psst, don't tell the agent we hard coded this.
 	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
 	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 2));
 	var nActions = 4;
@@ -160,7 +176,7 @@ function start(){
 	function continueLogic() {
 		stepcount++;
 		draw();
-		for(ii=0;ii<stepsBetweenDraw +stepsBetweenDraw*Math.random();ii++) {
+		for(ii=0;ii<stepsBetweenDraw + skinnerbox*stepsBetweenDraw*Math.random();ii++) {
 			oldX=agentLocation[0];
 			oldY=agentLocation[1];
 			roll = Math.random();
@@ -191,12 +207,12 @@ function start(){
 			if((agent.eligibilityQueue.length > imgTailLength) || (stepcount%4 ==0 && agent.eligibilityQueue.length>1)) agent.eligibilityQueue.shift();
 			if(reward) console.log("Yay");
 		}
-		if(running) setTimeout(continueLogic, 50);
+		if(running) setTimeout(continueLogic, delayBetweenSteps);
 	}
 	draw();
 	//continueLogic();
 }
 
-//document.addEventListener("load", start);// I don't work.
-//document.onload = start;// I don't work
-window.onload = start; // I work!!!
+//document.addEventListener("load", initialize);// I don't work.
+//document.onload = initialize;// I don't work
+window.onload = initialize; // I work!!!
