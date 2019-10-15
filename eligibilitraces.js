@@ -40,7 +40,8 @@ function initialize(){
 	simSpeedSlider.onclick = function(){
 		if (this.value > 50){
 			skinnerbox = 1;
-			stepsBetweenDraw = 5*(this.value-50);
+			delayBetweenSteps = 0;
+			stepsBetweenDraw = 0.1*(this.value-50)*(this.value-50);
 		}else{
 			skinnerbox = 0;
 			stepsBetweenDraw = 1;
@@ -99,7 +100,7 @@ function initialize(){
 	var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
 	var goalLocation2 = [xPix-2,yPix-5];// psst, don't tell the agent we hard coded this.
 	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
-	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 2));
+	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 4));
 	var nActions = 4;
 	var policy = Array(xPix).fill().map(x => Array(yPix).fill().map(x => Array(nActions).fill(1/nActions)));
 
@@ -148,8 +149,8 @@ function initialize(){
 				valueContext.fillStyle = 
 					`rgb(
 						0,
-						${100*valueFunction[x][y]},
-						${100*valueFunction[x][y]}
+						${50*valueFunction[x][y]},
+						${50*valueFunction[x][y]}
 					)`;
 				valueContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
 			}
