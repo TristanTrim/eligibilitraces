@@ -21,12 +21,11 @@ var skinnerbox = 1;
 var toggle;
 var running = false;
 var agent;
+var env;
 var valueFunction;
 
 var stepcount;
 var agentLocation;
-var goalLocation1;
-var goalLocation2;
 var nActions;
 var policy;
 
@@ -44,15 +43,13 @@ function initialize(){
 
 	function getMousePos(canvas, evt) {
 	    var rect = canvas.getBoundingClientRect();
-		console.log("Hi");
-	    return {
-	      x: Math.floor((evt.clientX - rect.left)/pixWidth),
-	      y: Math.floor((evt.clientY - rect.top)/pixHeight)
-	    };
+	    return([Math.floor((evt.clientX - rect.left)/pixWidth),
+	       Math.floor((evt.clientY - rect.top)/pixHeight)]);
 	}
 	gridCanvas.onclick = function(ev){
 		coords = getMousePos(gridCanvas, ev);
-		toggleBlock(coords);
+		console.log(coords);
+		env.toggleGoal(coords);
 	};
 
 	//styling in js cause I am the worst.
@@ -64,11 +61,8 @@ function initialize(){
 	pixHeight = valueCanvas.height/yPix;
 
 	// logic setup
-	 stepcount = 0;
-	 agentLocation = [0,0];
-	// goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
-	 goalLocation1 = [xPix-2,0];//yPix-2];// psst, don't tell the agent we hard coded this.
-	 goalLocation2 = [xPix-2,yPix-5];// psst, don't tell the agent we hard coded this.
+	stepcount = 0;
+	agentLocation = [0,0];
 	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
 	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 4));
 	 nActions = 4;
@@ -146,17 +140,53 @@ function initialize(){
 //	env.stateActions.map(x => x.splice(0,1,x[0].splice(0,1,agentNull)));// readability? where we're going, we don't need readability!
 //	// bottom boarder
 //	env.stateActions.map(x => x.splice(yPix-1,1,x[yPix-1].splice(2,1,agentNull)));
-	// goals
-	env.stateActions[goalLocation1[0]][goalLocation1[1]]=
-		[agentWin,agentWin,agentWin,agentWin];
-	env.stateActions[goalLocation2[0]][goalLocation2[1]]=
-		[agentWin,agentWin,agentWin,agentWin];
+	// environment dynamics function!
 	env.step = function (choice) {
 		x = agentLocation[0];
 		y = agentLocation[1];
 		r = this.stateActions[x][y][choice]();
 		return r;
 	}
+	function coordSet(){//its not good, but it works.
+		this.array = Array();
+		this.add = function(coord){
+			found = this.del(coord)
+			this.array.push(coord);
+			return found;
+		}
+		this.del = function(coord){
+			// returns true if found and deleted else false;
+			found=false;
+			for(ii=0;ii<this.array.length;ii++){
+				if (coord[0] == this.array[ii][0]
+					&& coord[1] == this.array[ii][1]){
+					this.array.splice(ii, 1);
+					found=true;
+				}
+			}
+			return found;
+		}
+	}
+	env.goals = new coordSet();// don't touch
+	env.blocks = new coordSet();// hands off!
+	env.toggleGoal = function(coord){
+		if(this.goals.del(coord)){
+			env.stateActions[coord[0]][coord[1]] = [agentUp,agentRight,agentDown,agentLeft];
+		}else{
+			this.goals.add(coord);
+			env.stateActions[coord[0]][coord[1]] = [agentWin,agentWin,agentWin,agentWin];
+		}
+		draw()
+	}
+
+		
+	env.toggleGoal([xPix-2,0]);
+	env.toggleGoal([xPix-2,yPix-5]);// these are good goal locations. Don't tell the agent where they are.
+//	for(i = 0; i<yPix; i++){
+//		env.toggleBlock([10,i]);
+//		if (i == 10) i++;
+//	}
+
 
 	function probabilityNormalizer(probs){
 
@@ -186,8 +216,13 @@ function initialize(){
 		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
 		// Draw goal
 		gridContext.fillStyle="#090"
-		gridContext.fillRect(goalLocation1[0]*pixWidth, goalLocation1[1]*pixHeight, pixWidth, pixHeight);
-		gridContext.fillRect(goalLocation2[0]*pixWidth, goalLocation2[1]*pixHeight, pixWidth, pixHeight);
+		console.log(env.goals.array);
+		for(ii=0;ii<env.goals.array.length;ii++){
+			x = env.goals.array[ii][0];
+			y = env.goals.array[ii][1];
+			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
+		}
+
 		// Draw valueFunction
 		for (x=0;x<xPix;x++){
 			for (y=0;y<yPix;y++){
