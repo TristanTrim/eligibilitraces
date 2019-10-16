@@ -14,11 +14,20 @@ var delayBetweenSteps = 0;
 var skinnerbox = 1;
 
 var toggle;
+var running = false;
 var agent;
 var valueFunction;
 
+var stepcount;
+var agentLocation;
+var goalLocation1;
+var goalLocation2;
+var nActions;
+var policy;
+
 var imgTailLength = 200;
 var logicTailLength = 20;
+
 
 function initialize(){
 	// canvas setup
@@ -36,6 +45,44 @@ function initialize(){
 	pixWidth = valueCanvas.width/xPix;
 	pixHeight = valueCanvas.height/yPix;
 
+	// logic setup
+	 stepcount = 0;
+	 agentLocation = [0,0];
+	// goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
+	 goalLocation1 = [xPix-2,0];//yPix-2];// psst, don't tell the agent we hard coded this.
+	 goalLocation2 = [xPix-2,yPix-5];// psst, don't tell the agent we hard coded this.
+	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
+	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 4));
+	 nActions = 4;
+	 policy = Array(xPix).fill().map(x => Array(yPix).fill().map(x => Array(nActions).fill(1/nActions)));
+
+	agent = {};
+	agent.eligibilityQueue = [agentLocation.slice()];
+	agent.choose = function(agentLocation){//I get the feeling that passing an agent it's own location is incorrect data modeling.
+		action = null;
+		for (jj=0;jj<nActions;jj++){
+			roll -= policy[agentLocation[0]][agentLocation[1]][jj];
+			if (roll<=0){
+				action = jj;
+				break;
+			}
+		}
+		return action;
+	}
+	agent.policyUpdate = function(){
+		for (x=0;x<xPix;x++){
+			for (y=0;y<yPix;y++){
+				moves = [];
+				if( y > 0) moves.push(valueFunction[x][y-1]); else moves.push(0);
+				if( x < xPix-1) moves.push(valueFunction[x+1][y]); else moves.push(0);
+				if( y < yPix-1) moves.push(valueFunction[x][y+1]); else moves.push(0);
+				if( x > 0) moves.push(valueFunction[x-1][y]); else moves.push(0);
+				policy[x][y] = probabilityNormalizer(moves);
+			}
+		}
+	}
+	agent.policyUpdate();
+
 	// Cider Sliders! lol jk, they are html sliders!
 	simSpeedSlider = document.getElementById("SimSpeed");
 	simSpeedSlider.onclick = function(){
@@ -48,7 +95,7 @@ function initialize(){
 			stepsBetweenDraw = 1;
 			delayBetweenSteps = 3*(50 - this.value);
 		}
-		console.log(stepsBetweenDraw,delayBetweenSteps);
+		console.log("steps: "+stepsBetweenDraw+" delays: "+delayBetweenSteps);
 	}
 	simSpeedSlider.onclick();
 
@@ -103,43 +150,6 @@ function initialize(){
 	}
 	
 
-	// logic setup
-	var stepcount = 0;
-	var agentLocation = [0,0];
-	//var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
-	var goalLocation1 = [xPix-2,0];//yPix-2];// psst, don't tell the agent we hard coded this.
-	var goalLocation2 = [xPix-2,yPix-5];// psst, don't tell the agent we hard coded this.
-	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
-	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 4));
-	var nActions = 4;
-	var policy = Array(xPix).fill().map(x => Array(yPix).fill().map(x => Array(nActions).fill(1/nActions)));
-
-	agent = {};
-	agent.eligibilityQueue = [agentLocation.slice()];
-	agent.choose = function(agentLocation){//I get the feeling that passing an agent it's own location is incorrect data modeling.
-		action = null;
-		for (jj=0;jj<nActions;jj++){
-			roll -= policy[agentLocation[0]][agentLocation[1]][jj];
-			if (roll<=0){
-				action = jj;
-				break;
-			}
-		}
-		return action;
-	}
-	agent.policyUpdate = function(){
-		for (x=0;x<xPix;x++){
-			for (y=0;y<yPix;y++){
-				moves = [];
-				if( y > 0) moves.push(valueFunction[x][y-1]); else moves.push(0);
-				if( x < xPix-1) moves.push(valueFunction[x+1][y]); else moves.push(0);
-				if( y < yPix-1) moves.push(valueFunction[x][y+1]); else moves.push(0);
-				if( x > 0) moves.push(valueFunction[x-1][y]); else moves.push(0);
-				policy[x][y] = probabilityNormalizer(moves);
-			}
-		}
-	}
-	agent.policyUpdate();
 	//
 	function draw() {
 		// Clear screen for drawing next frame.
@@ -212,7 +222,6 @@ function initialize(){
 		}
 	}
 
-	var running = false;
 	toggle = function (){
 		running=!running;
 		if(running) continueLogic();
