@@ -48,7 +48,7 @@ function initialize(){
 	}
 	gridCanvas.onclick = function(ev){
 		coords = getMousePos(gridCanvas, ev);
-		console.log(coords);
+		console.log("coords: "+coords);
 		env.toggleGoal(coords);
 	};
 
@@ -216,7 +216,6 @@ function initialize(){
 		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
 		// Draw goal
 		gridContext.fillStyle="#090"
-		console.log(env.goals.array);
 		for(ii=0;ii<env.goals.array.length;ii++){
 			x = env.goals.array[ii][0];
 			y = env.goals.array[ii][1];
