@@ -36,6 +36,7 @@ function initialize(){
 	pixWidth = valueCanvas.width/xPix;
 	pixHeight = valueCanvas.height/yPix;
 
+	// Cider Sliders! lol jk, they are html sliders!
 	simSpeedSlider = document.getElementById("SimSpeed");
 	simSpeedSlider.onclick = function(){
 		if (this.value > 50){
@@ -51,6 +52,14 @@ function initialize(){
 	}
 	simSpeedSlider.onclick();
 
+	alphaSlider = document.getElementById("Alpha");
+	alphaSlider.onclick = function(){
+		alpha = this.value;
+		console.log("alpha set to: "+alpha);
+	}
+	alphaSlider.value = 0.1;
+
+	// Half baked environment sim
 	var env = {}
 	env.step = function (choice) {
 		if(agentLocation[0]==goalLocation1[0] && agentLocation[1]==goalLocation1[1]){// ahh this is not how to do multiple goals go home and sleep!
@@ -97,7 +106,8 @@ function initialize(){
 	// logic setup
 	var stepcount = 0;
 	var agentLocation = [0,0];
-	var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
+	//var goalLocation1 = [xPix-2,yPix-2];// psst, don't tell the agent we hard coded this.
+	var goalLocation1 = [xPix-2,0];//yPix-2];// psst, don't tell the agent we hard coded this.
 	var goalLocation2 = [xPix-2,yPix-5];// psst, don't tell the agent we hard coded this.
 	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
 	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 4));
