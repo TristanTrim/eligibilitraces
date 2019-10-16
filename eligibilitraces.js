@@ -1,3 +1,8 @@
+// All code in this document is entirely fictional. All algorithms
+// are impersonated... poorly. The following code contains weird
+// variable names and due to its contents it should not be viewed
+// by anyone.
+
 
 // keep as multiples of 13 and 7 cause pretty.
 pixScale = 3;
@@ -37,6 +42,19 @@ function initialize(){
 	var gridCanvas = document.getElementById("gridWorldCanvas");
 	var gridContext = gridCanvas.getContext("2d");
 
+	function getMousePos(canvas, evt) {
+	    var rect = canvas.getBoundingClientRect();
+		console.log("Hi");
+	    return {
+	      x: Math.floor((evt.clientX - rect.left)/pixWidth),
+	      y: Math.floor((evt.clientY - rect.top)/pixHeight)
+	    };
+	}
+	gridCanvas.onclick = function(ev){
+		coords = getMousePos(gridCanvas, ev);
+		toggleBlock(coords);
+	};
+
 	//styling in js cause I am the worst.
 	valueCanvas.style.borderStyle = "solid"; 
 	gridCanvas.style.borderStyle = "solid"; 
@@ -68,7 +86,7 @@ function initialize(){
 			}
 		}
 		return action;
-	}
+	};
 	agent.policyUpdate = function(){
 		for (x=0;x<xPix;x++){
 			for (y=0;y<yPix;y++){
@@ -107,29 +125,37 @@ function initialize(){
 	alphaSlider.value = 0.1;
 
 	// Half baked environment sim
+	function agentUp(){agentLocation[1]-=1; return 0}
+	function agentRight(){agentLocation[0]+=1; return 0}
+	function agentDown(){agentLocation[1]+=1; return 0}
+	function agentLeft(){agentLocation[0]-=1; return 0}
+	function agentNull(){return 0}
+	function agentWin(){ agentLocation = [0,0]; return 1;
+	}
 	var env = {}
+	// basic gridworld
+	env.stateActions = Array(xPix).fill().map(x => Array(yPix).fill().map(x =>
+		[agentUp,agentRight,agentDown,agentLeft]));
+//	// left boarder
+//	env.stateActions[0] = env.stateActions[0].map(x =>
+//		[agentUp,agentRight,agentDown,agentNull]);
+//	// right boarder
+//	env.stateActions[xPix-1] = env.stateActions[xPix-1].map(x =>
+//		[agentUp,agentNull,agentDown,agentLeft]);
+//	// top boarder
+//	env.stateActions.map(x => x.splice(0,1,x[0].splice(0,1,agentNull)));// readability? where we're going, we don't need readability!
+//	// bottom boarder
+//	env.stateActions.map(x => x.splice(yPix-1,1,x[yPix-1].splice(2,1,agentNull)));
+	// goals
+	env.stateActions[goalLocation1[0]][goalLocation1[1]]=
+		[agentWin,agentWin,agentWin,agentWin];
+	env.stateActions[goalLocation2[0]][goalLocation2[1]]=
+		[agentWin,agentWin,agentWin,agentWin];
 	env.step = function (choice) {
-		if(agentLocation[0]==goalLocation1[0] && agentLocation[1]==goalLocation1[1]){// ahh this is not how to do multiple goals go home and sleep!
-			agentLocation=[0,0];
-			return 1;
-		}else if(agentLocation[0]==goalLocation2[0] && agentLocation[1]==goalLocation2[1]){
-			agentLocation=[0,0];
-			return 1;
-		}else{
-			//let roll = Math.random();
-			roll = choice/4;
-			if(roll<0.25){
-				if(agentLocation[1]>0) agentLocation[1]--;
-			}else if(roll<.5){
-				if(agentLocation[0]<xPix-1) agentLocation[0]++;
-			}else if(roll<.75){
-				if(agentLocation[1]<yPix-1) agentLocation[1]++;
-			}else{
-				if(agentLocation[0]>0) agentLocation[0]--;
-			}
-			return 0;
-		}
-
+		x = agentLocation[0];
+		y = agentLocation[1];
+		r = this.stateActions[x][y][choice]();
+		return r;
 	}
 
 	function probabilityNormalizer(probs){
