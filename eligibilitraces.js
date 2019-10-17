@@ -2,6 +2,8 @@
 // are impersonated... poorly. The following code contains weird
 // variable names and due to its contents it should not be viewed
 // by anyone.
+// I have bits of nice language layers mixed in with lots of half
+// baked waterfall design.
 
 
 // keep as multiples of 13 and 7 cause pretty.
@@ -29,6 +31,8 @@ var agentLocation;
 var nActions;
 var policy;
 
+var paintType = 2;
+
 var imgTailLength = 200;
 var logicTailLength = 20;
 
@@ -49,7 +53,12 @@ function initialize(){
 	gridCanvas.onclick = function(ev){
 		coords = getMousePos(gridCanvas, ev);
 		console.log("coords: "+coords);
-		env.toggleGoal(coords);
+		if(paintType == 1){
+			env.toggleGoal(coords);
+		}if(paintType == 2){
+			env.toggleBlock(coords);
+		}
+
 	};
 
 	//styling in js cause I am the worst.
@@ -118,7 +127,7 @@ function initialize(){
 	}
 	alphaSlider.value = 0.1;
 
-	// Half baked environment sim
+	//	 Half baked environment sim
 	function agentUp(){agentLocation[1]-=1; return 0}
 	function agentRight(){agentLocation[0]+=1; return 0}
 	function agentDown(){agentLocation[1]+=1; return 0}
@@ -126,25 +135,35 @@ function initialize(){
 	function agentNull(){return 0}
 	function agentWin(){ agentLocation = [0,0]; return 1;
 	}
-	var env = {}
+	env = {}
+
 	// basic gridworld
-	env.stateActions = Array(xPix).fill().map(x => Array(yPix).fill().map(x =>
-		[agentUp,agentRight,agentDown,agentLeft]));
-//	// left boarder
-//	env.stateActions[0] = env.stateActions[0].map(x =>
-//		[agentUp,agentRight,agentDown,agentNull]);
-//	// right boarder
-//	env.stateActions[xPix-1] = env.stateActions[xPix-1].map(x =>
-//		[agentUp,agentNull,agentDown,agentLeft]);
-//	// top boarder
-//	env.stateActions.map(x => x.splice(0,1,x[0].splice(0,1,agentNull)));// readability? where we're going, we don't need readability!
-//	// bottom boarder
-//	env.stateActions.map(x => x.splice(yPix-1,1,x[yPix-1].splice(2,1,agentNull)));
+	//
+	// stateActions are in an Array with the shape:
+	// stateActions[x][y][square type, [actions]]
+	// where the x,y are the coordinates,
+	// the square type is:
+	// 0: normal square,
+	// 1: goal square,
+	// 2: blocking square
+	// and the actions are functions that are called
+	// when the agent makes a choice of action.
+	env.stateActions=[];
+	for(x=0;x<xPix;x++){
+		env.stateActions[x]=[];
+		for(y=0;y<yPix;y++){
+			env.stateActions[x][y] = [0,[agentUp,agentRight,agentDown,agentLeft]];
+		}
+	}
+	//env.stateActions = Array(xPix).fill().map(x => Array(yPix).fill().map(x =>
+		//[0,[]));// so... technically the agent
+			// can move out of bounds, but it never will because there's no
+			// value out there.
 	// environment dynamics function!
 	env.step = function (choice) {
 		x = agentLocation[0];
 		y = agentLocation[1];
-		r = this.stateActions[x][y][choice]();
+		r = this.stateActions[x][y][1][choice]();
 		return r;
 	}
 	function coordSet(){//its not good, but it works.
@@ -169,12 +188,75 @@ function initialize(){
 	}
 	env.goals = new coordSet();// don't touch
 	env.blocks = new coordSet();// hands off!
+	env.resetSquare = function(coord){
+		console.log("resetsquare");
+		rsx = coord[0];
+		rsy = coord[1];
+		type = this.stateActions[rsx][rsy][0];
+		console.log(rsx,rsy,type);
+		if(type == 0){// Normal square
+			console.log("normal")
+			env.stateActions[rsx][rsy][1][0] = agentUp;
+			env.stateActions[rsx][rsy][1][1] = agentRight;
+			env.stateActions[rsx][rsy][1][2] = agentDown;
+			env.stateActions[rsx][rsy][1][3] = agentLeft;
+			// up right down left
+			if(rsy==0 || env.stateActions[rsx][rsy-1][0] == 2){//up is blocked
+				env.stateActions[rsx][rsy][1][0] = agentNull;
+			}
+			if(rsx==xPix-1 || env.stateActions[rsx+1][rsy][0] == 2){//right is blocked
+				env.stateActions[rsx][rsy][1][1] = agentNull;
+			}
+			if(rsy==yPix-1 || env.stateActions[rsx][rsy+1][0] == 2){//down is blocked
+				env.stateActions[rsx][rsy][1][2] = agentNull;
+			}
+			if(rsx==0 || env.stateActions[rsx-1][rsy][0] == 2){//left is blocked
+				env.stateActions[rsx][rsy][1][3] = agentNull;
+			}
+		}else if(type == 1){// Goal square
+			console.log("goal");
+			env.stateActions[rsx][rsy][1][0] = agentWin;
+			env.stateActions[rsx][rsy][1][1] = agentWin;
+			env.stateActions[rsx][rsy][1][2] = agentWin;
+			env.stateActions[rsx][rsy][1][3] = agentWin;
+		}else if(type == 2){// Blocking square
+			console.log("block");
+			env.stateActions[rsx][rsy][1][0] = agentUp;
+			env.stateActions[rsx][rsy][1][1] = agentRight;
+			env.stateActions[rsx][rsy][1][2] = agentDown;
+			env.stateActions[rsx][rsy][1][3] = agentLeft;
+		}
+	}
+	env.setSquareLogic = function(coord, type){
+		x = coord[0];
+		y = coord[1];
+		changingFromType = this.stateActions[x][y][0];
+		if(changingFromType == type) return;
+		this.stateActions[x][y][0] = type;
+		this.resetSquare(coord);// this will make the logic agree with the type we just set.
+		if( changingFromType == 2 || type == 2){
+			if(y>0) this.resetSquare([x,y-1]);
+			if(x<xPix-1) this.resetSquare([x+1,y]);
+			if(y<yPix-1) this.resetSquare([x,y+1]);
+			if(x>0) this.resetSquare([x-1,y]);
+		}
+	}
+
 	env.toggleGoal = function(coord){
-		if(this.goals.del(coord)){
-			env.stateActions[coord[0]][coord[1]] = [agentUp,agentRight,agentDown,agentLeft];
-		}else{
+		if(this.goals.del(coord)){// we're removing a goal
+			this.setSquareLogic(coord, 0);
+		}else{		// we're adding a goal
 			this.goals.add(coord);
-			env.stateActions[coord[0]][coord[1]] = [agentWin,agentWin,agentWin,agentWin];
+			this.setSquareLogic(coord, 1);
+		}
+		draw()
+	}
+	env.toggleBlock = function(coord){
+		if(this.blocks.del(coord)){// we're removing a block
+			this.setSquareLogic(coord, 0);
+		}else{		// we're adding a block
+			this.blocks.add(coord);
+			this.setSquareLogic(coord, 2);
 		}
 		draw()
 	}
@@ -182,10 +264,11 @@ function initialize(){
 		
 	env.toggleGoal([xPix-2,0]);
 	env.toggleGoal([xPix-2,yPix-5]);// these are good goal locations. Don't tell the agent where they are.
-//	for(i = 0; i<yPix; i++){
-//		env.toggleBlock([10,i]);
-//		if (i == 10) i++;
-//	}
+	// add some blocks to make it tricky.
+	for(i = 1; i<yPix-1; i++){
+		env.toggleBlock([10,i]);
+		if (i == 10) i++;
+	}
 
 
 	function probabilityNormalizer(probs){
@@ -214,11 +297,18 @@ function initialize(){
 		// Draw agent
 		gridContext.fillStyle="#000"
 		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
-		// Draw goal
+		// Draw goals
 		gridContext.fillStyle="#090"
 		for(ii=0;ii<env.goals.array.length;ii++){
 			x = env.goals.array[ii][0];
 			y = env.goals.array[ii][1];
+			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
+		}
+		// Draw blocks
+		gridContext.fillStyle="#999"
+		for(ii=0;ii<env.blocks.array.length;ii++){
+			x = env.blocks.array[ii][0];
+			y = env.blocks.array[ii][1];
 			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
 		}
 
