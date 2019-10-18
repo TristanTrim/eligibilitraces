@@ -16,6 +16,9 @@ var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 			// that influinced current reward... Thats a mouthful.
 var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
+var exploration = 0.5;  // also made up by me. This is the amount to add to all value estimates every 100 steps.
+var explorationInterval = 100000
+
 var stepsBetweenDraw = 10;
 var delayBetweenSteps = 0;
 var skinnerbox = 1;
@@ -84,14 +87,16 @@ function initialize(){
 	//valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 1.5+Math.random()));
 	valueFunction = Array(xPix).fill().map(x => Array(yPix).fill().map(x => 4));
 	 nActions = 4;
-	 policy = Array(xPix).fill().map(x => Array(yPix).fill().map(x => Array(nActions).fill(1/nActions)));
+	 policy = Array(xPix).fill().map(x => Array(yPix).fill().map(y => Array(nActions-(x==0?1:0)-(y==0?1:0)-(x==xPix-1?1:0)-(y==yPix-1?1:0)).fill(1/nActions)));
 
 	agent = {};
 	agent.eligibilityQueue = [agentLocation.slice()];
 	agent.choose = function(agentLocation){//I get the feeling that passing an agent it's own location is incorrect data modeling.
+		cx=agentLocation[0];
+		cy=agentLocation[1];
 		action = null;
 			roll = Math.random();
-		for (jj=0;jj<nActions;jj++){
+		for (jj=0;jj<policy[cx][cy].length;jj++){// I don't think it actually needs to know how many actions... it will break just as well if it loops to long either way.
 			roll -= policy[agentLocation[0]][agentLocation[1]][jj];
 			if (roll<=0){
 				action = jj;
@@ -104,11 +109,43 @@ function initialize(){
 		for (x=0;x<xPix;x++){
 			for (y=0;y<yPix;y++){
 				moves = [];
-				if( y > 0) moves.push(valueFunction[x][y-1]); else moves.push(0);
-				if( x < xPix-1) moves.push(valueFunction[x+1][y]); else moves.push(0);
-				if( y < yPix-1) moves.push(valueFunction[x][y+1]); else moves.push(0);
-				if( x > 0) moves.push(valueFunction[x-1][y]); else moves.push(0);
+				if( y > 0){ moves.push(valueFunction[x][y-1]); }
+				if( x < xPix-1){ moves.push(valueFunction[x+1][y]); }
+				if( y < yPix-1){ moves.push(valueFunction[x][y+1]); }
+				if( x > 0){ moves.push(valueFunction[x-1][y]); }
 				policy[x][y] = probabilityNormalizer(moves);
+				/// this was a clever way to solve a problem that it was not clever to have had.
+			////////moves = [];
+			////////mask = [];
+			////////let iii=1;
+			////////if( y > 0){
+			////////	moves.push(valueFunction[x][y-1]);
+			////////	mask.push(iii++);
+			////////}else{
+			////////	mask.push(0);
+			////////}
+			////////if( x < xPix-1){
+			////////	moves.push(valueFunction[x+1][y]);
+			////////	mask.push(iii++);
+			////////}else{
+			////////	mask.push(0);
+			////////}
+			////////if( y < yPix-1){
+			////////	moves.push(valueFunction[x][y+1]);
+			////////	mask.push(iii++);
+			////////}else{
+			////////	mask.push(0);
+			////////}
+			////////if( x > 0){
+			////////	moves.push(valueFunction[x-1][y]);
+			////////	mask.push(iii);
+			////////}else{
+			////////	mask.push(0);
+			////////}
+			////////policyBuf = [0].concat(probabilityNormalizer(moves));
+			////////for(iii=0;iii<4;iii++){
+			////////	policy[x][y][iii] = policyBuf[mask[iii]];
+			////////}
 			}
 		}
 	}
@@ -162,7 +199,11 @@ function initialize(){
 	for(x=0;x<xPix;x++){
 		env.stateActions[x]=[];
 		for(y=0;y<yPix;y++){
-			env.stateActions[x][y] = [0,[agentUp,agentRight,agentDown,agentLeft]];
+			env.stateActions[x][y]=[0,[]];
+			if(y>0) env.stateActions[x][y][1].push(agentUp);
+			if(x<xPix-1) env.stateActions[x][y][1].push(agentRight);
+			if(y<yPix-1) env.stateActions[x][y][1].push(agentDown);
+			if(x>0) env.stateActions[x][y][1].push(agentLeft);
 		}
 	}
 	//env.stateActions = Array(xPix).fill().map(x => Array(yPix).fill().map(x =>
@@ -204,35 +245,35 @@ function initialize(){
 		type = this.stateActions[rsx][rsy][0];
 		if(type == 0){// Normal square
 			//default actions
-			env.stateActions[rsx][rsy][1][0] = agentUp;
-			env.stateActions[rsx][rsy][1][1] = agentRight;
-			env.stateActions[rsx][rsy][1][2] = agentDown;
-			env.stateActions[rsx][rsy][1][3] = agentLeft;
-			// effect from blocks and edge of gridworld
-			// up right down left
-			if(rsy==0 || env.stateActions[rsx][rsy-1][0] == 2){//up is blocked
-				env.stateActions[rsx][rsy][1][0] = agentNull;
+			env.stateActions[rsx][rsy][1] = [];
+			if( rsy > 0){
+				if(env.stateActions[rsx][rsy-1][0] == 2) env.stateActions[rsx][rsy][1].push(agentNull);
+				else env.stateActions[rsx][rsy][1].push(agentUp);
 			}
-			if(rsx==xPix-1 || env.stateActions[rsx+1][rsy][0] == 2){//right is blocked
-				env.stateActions[rsx][rsy][1][1] = agentNull;
+			if( rsx < xPix-1){
+				if(env.stateActions[rsx+1][rsy][0] == 2) env.stateActions[rsx][rsy][1].push(agentNull);
+				else env.stateActions[rsx][rsy][1].push(agentRight);
 			}
-			if(rsy==yPix-1 || env.stateActions[rsx][rsy+1][0] == 2){//down is blocked
-				env.stateActions[rsx][rsy][1][2] = agentNull;
+			if( rsy < yPix-1){
+				if(env.stateActions[rsx][rsy+1][0] == 2) env.stateActions[rsx][rsy][1].push(agentNull);
+				else env.stateActions[rsx][rsy][1].push(agentDown);
 			}
-			if(rsx==0 || env.stateActions[rsx-1][rsy][0] == 2){//left is blocked
-				env.stateActions[rsx][rsy][1][3] = agentNull;
+			if( rsx > 0){
+				if(env.stateActions[rsx-1][rsy][0] == 2) env.stateActions[rsx][rsy][1].push(agentNull);
+				else env.stateActions[rsx][rsy][1].push(agentLeft);
 			}
 		}else if(type == 1){// Goal square
-			env.stateActions[rsx][rsy][1][0] = agentWin;
-			env.stateActions[rsx][rsy][1][1] = agentWin;
-			env.stateActions[rsx][rsy][1][2] = agentWin;
-			env.stateActions[rsx][rsy][1][3] = agentWin;
+			env.stateActions[rsx][rsy][1] = [];
+			if( rsy > 0){ env.stateActions[rsx][rsy][1].push(agentWin) }
+			if( rsx < xPix-1){ env.stateActions[rsx][rsy][1].push(agentWin) }
+			if( rsy < yPix-1){ env.stateActions[rsx][rsy][1].push(agentWin) }
+			if( rsx > 0){ env.stateActions[rsx][rsy][1].push(agentWin) }
 		}else if(type == 2){// Blocking square
-			console.log("was block");
-			env.stateActions[rsx][rsy][1][0] = agentUp;
-			env.stateActions[rsx][rsy][1][1] = agentRight;
-			env.stateActions[rsx][rsy][1][2] = agentDown;
-			env.stateActions[rsx][rsy][1][3] = agentLeft;
+			env.stateActions[rsx][rsy][1] = [];
+			if( rsy > 0){ env.stateActions[rsx][rsy][1].push(agentUp); }
+			if( rsx < xPix-1){ env.stateActions[rsx][rsy][1].push(agentRight); }
+			if( rsy < yPix-1){ env.stateActions[rsx][rsy][1].push(agentDown); }
+			if( rsx > 0){ env.stateActions[rsx][rsy][1].push(agentLeft); }
 		}
 	}
 	env.setSquareLogic = function(coord, type){
@@ -244,10 +285,8 @@ function initialize(){
 
 		if(type == 1) this.goals.add(coord);
 		else if(type ==2) this.blocks.add(coord);
-		else if(type == 0){
-			if(changingFromType == 1) this.goals.del(coord);
-			if(changingFromType == 2) this.blocks.del(coord);
-		}
+		if(changingFromType == 1) this.goals.del(coord);
+		if(changingFromType == 2) this.blocks.del(coord);
 		this.stateActions[x][y][0] = type;
 		console.log(x,y,changingFromType,type);
 		this.resetSquare(coord);// this will make the logic agree with the type we just set.
@@ -294,7 +333,7 @@ function initialize(){
 		//normalize to p mass = 1
 		sum = probs.reduce((a,b)=> a+b,0);
 		probs = probs.map(x => x/sum);
-		return probs
+		return probs;
 	}
 	
 
@@ -364,8 +403,14 @@ function initialize(){
 			action = agent.choose(agentLocation);
 			reward = env.step(action);
 
-			predictedX = oldX+[0,1,0,-1][action];
-			predictedY = oldY+[-1,0,1,0][action];
+			xmask=[];
+			ymask=[];
+			if(y>0){ xmask.push(0); ymask.push(-1);}
+			if(x<xPix-1) { xmask.push(1); ymask.push(0);}
+			if(y<yPix-1) { xmask.push(0); ymask.push(1);}
+			if(x>0) { xmask.push(-1); ymask.push(0);}
+			predictedX = oldX+xmask[action];
+			predictedY = oldY+ymask[action];
 			newX=agentLocation[0];
 			newY=agentLocation[1];
 
@@ -409,7 +454,7 @@ function initialize(){
 	// Main loop! Get outta here async programming!
 	function continueLogic() {
 		stepcount++;
-		if(stepcount%100==0) valueFunction = valueFunction.map(x => x.map(y => y+0.0001));
+		if(stepcount%explorationInterval==0) valueFunction = valueFunction.map(x => x.map(y => y+exploration));
 		env.draw();
 		logicUpdate();
 		if(running) setTimeout(continueLogic, delayBetweenSteps);
