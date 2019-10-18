@@ -81,6 +81,7 @@ function initialize(){
 	agent.eligibilityQueue = [agentLocation.slice()];
 	agent.choose = function(agentLocation){//I get the feeling that passing an agent it's own location is incorrect data modeling.
 		action = null;
+			roll = Math.random();
 		for (jj=0;jj<nActions;jj++){
 			roll -= policy[agentLocation[0]][agentLocation[1]][jj];
 			if (roll<=0){
@@ -189,13 +190,10 @@ function initialize(){
 	env.goals = new coordSet();// don't touch
 	env.blocks = new coordSet();// hands off!
 	env.resetSquare = function(coord){
-		console.log("resetsquare");
 		rsx = coord[0];
 		rsy = coord[1];
 		type = this.stateActions[rsx][rsy][0];
-		console.log(rsx,rsy,type);
 		if(type == 0){// Normal square
-			console.log("normal")
 			env.stateActions[rsx][rsy][1][0] = agentUp;
 			env.stateActions[rsx][rsy][1][1] = agentRight;
 			env.stateActions[rsx][rsy][1][2] = agentDown;
@@ -214,13 +212,11 @@ function initialize(){
 				env.stateActions[rsx][rsy][1][3] = agentNull;
 			}
 		}else if(type == 1){// Goal square
-			console.log("goal");
 			env.stateActions[rsx][rsy][1][0] = agentWin;
 			env.stateActions[rsx][rsy][1][1] = agentWin;
 			env.stateActions[rsx][rsy][1][2] = agentWin;
 			env.stateActions[rsx][rsy][1][3] = agentWin;
 		}else if(type == 2){// Blocking square
-			console.log("block");
 			env.stateActions[rsx][rsy][1][0] = agentUp;
 			env.stateActions[rsx][rsy][1][1] = agentRight;
 			env.stateActions[rsx][rsy][1][2] = agentDown;
@@ -277,6 +273,7 @@ function initialize(){
 
 		max = probs.reduce((a,b)=> a>b?a:b);
 		probs = probs.map(x => max + 0.000001 - x);// <-- This parameter is important
+		//probs.map(x=> console.log(x==0));divide by zero check.
 		probs = probs.map(x => 1 / x);
 
 		//min = probs.reduce((a,b)=>a>b?b:a);
@@ -338,18 +335,47 @@ function initialize(){
 		}
 
 	}
+	function removeFromEQ(array,coord){
+		// remove old eligibilities of state if already in eligibilityQueue
+		for(jj=array.length-1; jj>=0; jj--){
+			if (array[jj][0] == coord[0]
+				&& array[jj][1] == coord[1]){
+				agent.eligibilityQueue.splice(jj, 1);
+			}
+		}
+	}
 	function logicUpdate() {
 		for(ii=0;ii<stepsBetweenDraw + skinnerbox*stepsBetweenDraw*Math.random();ii++) {
 			oldX=agentLocation[0];
 			oldY=agentLocation[1];
-			roll = Math.random();
+
 			action = agent.choose(agentLocation);
-			//if(stepcount%100==10) console.log(action);
 			reward = env.step(action);
+
+			predictedX = oldX+[0,1,0,-1][action];
+			predictedY = oldY+[-1,0,1,0][action];
 			newX=agentLocation[0];
 			newY=agentLocation[1];
+
+			/// ugg, this is such a kludge. Basically we're updating the value of the square we just moved off
+			// of unless we didn't move cause there's a block where we're trying to move to,
+			// in which case we update the value of the square we're trying to move to.
+			// this whole thing is because I stupidly used state values instead of state-action values because
+			// I thought "Oh, the dynamics of the environment are simple and state values will visualize better!"
+			// (read in high pitch mocking voice) But no. I was a fool!
+			if(oldX==newX && oldY==newY){
+				removeFromEQ(agent.eligibilityQueue,[predictedX,predictedY]);
+				agent.eligibilityQueue.push([predictedX,predictedY]);
+			}else{
+				removeFromEQ(agent.eligibilityQueue,[oldX,oldY]);
+				agent.eligibilityQueue.push([oldX,oldY]);
+			}
+			if((agent.eligibilityQueue.length > imgTailLength) || (stepcount%4 ==0 && agent.eligibilityQueue.length>1)) agent.eligibilityQueue.shift();
+
+
 			surprise = reward + gamma*valueFunction[newX][newY] - valueFunction[oldX][oldY];// a surprise can be positive or negative.
 			if (Math.abs(surprise) > jadedness) {
+				//Nice eligibility value function update
 				eligibility = 1;
 				for (jj=agent.eligibilityQueue.length-1; !(jj<0 || jj<agent.eligibilityQueue.length-logicTailLength); jj--){
 					x = agent.eligibilityQueue[jj][0];
@@ -359,15 +385,6 @@ function initialize(){
 				}
 				agent.policyUpdate();
 			}
-			// remove old eligibilities of state if already in eligibilityQueue
-			for(jj=agent.eligibilityQueue.length-1; jj>=0; jj--){
-				if (agent.eligibilityQueue[jj][0] == newX
-					&& agent.eligibilityQueue[jj][1] == newY){
-					agent.eligibilityQueue.splice(jj, 1);
-				}
-			}
-			agent.eligibilityQueue.push([newX,newY]);
-			if((agent.eligibilityQueue.length > imgTailLength) || (stepcount%4 ==0 && agent.eligibilityQueue.length>1)) agent.eligibilityQueue.shift();
 			if(reward) console.log("Yay");
 		}
 	}
