@@ -63,9 +63,9 @@ function initialize(){
 				if(changed) env.draw();
 			}else{
 				if(paintType==3){
-					valueFunction[coords[0]][coords[1]]+=0.1;
+					valueFunction[coords[0]][coords[1]]+=0.15;
 				}else if(paintType==4){
-					valueFunction[coords[0]][coords[1]]*=0.99;
+					valueFunction[coords[0]][coords[1]]*=0.95;
 				}
 				env.draw();
 			}
@@ -91,9 +91,9 @@ function initialize(){
 			if(changed) env.draw();
 		}else{
 			if(paintType==3){
-				valueFunction[coords[0]][coords[1]]+=0.1;
+				valueFunction[coords[0]][coords[1]]+=0.15;
 			}else if(paintType==4){
-				valueFunction[coords[0]][coords[1]]*=0.99;
+				valueFunction[coords[0]][coords[1]]*=0.95;
 			}
 			env.draw();
 		}
@@ -101,10 +101,6 @@ function initialize(){
 	}
 	gridCanvas.addEventListener('mousedown', ev => mousedown(ev));
 	valueCanvas.addEventListener('mousedown', ev => mousedown(ev));
-
-	//styling in js cause I am the worst.
-	valueCanvas.style.borderStyle = "solid"; 
-	gridCanvas.style.borderStyle = "solid"; 
 
 	gridContext.fillStyle = "#000000";
 	pixWidth = valueCanvas.width/xPix;
@@ -202,6 +198,12 @@ function initialize(){
 		console.log("alpha set to: "+alpha);
 	}
 	alphaSlider.onclick();
+	gammaSlider = document.getElementById("Gamma");
+	gammaSlider.onclick = function(){
+		gamma = this.value;
+		console.log("gamma set to: "+gamma);
+	}
+	gammaSlider.onclick();
 
 	//	 Half baked environment sim
 	function agentUp(){agentLocation[1]-=1; return 0}
@@ -369,17 +371,17 @@ function initialize(){
 		gridContext.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
 		valueContext.clearRect(0, 0, valueCanvas.width, valueCanvas.height);
 		// Draw agent
-		gridContext.fillStyle="#000"
+		gridContext.fillStyle="#d51"
 		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
 		// Draw goals
-		gridContext.fillStyle="#090"
+		gridContext.fillStyle="#8a0"
 		for(ii=0;ii<env.goals.array.length;ii++){
 			x = env.goals.array[ii][0];
 			y = env.goals.array[ii][1];
 			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
 		}
 		// Draw blocks
-		gridContext.fillStyle="#999"
+		gridContext.fillStyle="#688"
 		for(ii=0;ii<env.blocks.array.length;ii++){
 			x = env.blocks.array[ii][0];
 			y = env.blocks.array[ii][1];

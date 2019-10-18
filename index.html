@@ -6,24 +6,27 @@
 		<title>Eligibilitraces</title>
 		<script src="eligibilitraces.js"></script>
 	</head>
-	<body>
+	<body style="background:#fdf6e3">
 		<span>
 			Value:
-			<canvas id="valueCanvas">
+			<canvas style="background:#002b36; vertical-align: top" id="valueCanvas">
 		</span>
 		<span>
 			GridWorld:
-			<canvas id="gridWorldCanvas">
+			<canvas style="background:#002b36; vertical-align: top" id="gridWorldCanvas">
 		</span>
 		<br>
 		<span>
+			|
 			<a href="javascript:toggle();">start/stop</a>
 			<a href="javascript:initialize();"> reset </a>
+			| |
 			<a style="color:#aaa" href="javascript:setPaintType(0);"> normal </a>
 			<a style="color:#090" href="javascript:setPaintType(1);"> goal </a>
 			<a style="color:#555" href="javascript:setPaintType(2);"> block </a>
 			<a style="color:#0bb" href="javascript:setPaintType(3);"> value </a>
 			<a style="color:#066" href="javascript:setPaintType(4);"> cost </a>
+			|
 		</span>
 		<hr>
 		Simulation speed:
@@ -33,7 +36,7 @@
 		<input id="Alpha" type="range" name="points" min="0" max="1" step="0.01" value="0.1">
 		<br>
 		Gamma:
-		<input id="Gamma" type="range" name="points" min="0" max="1" step="0.01">
+		<input id="Gamma" type="range" name="points" min=".95" max="1" step="0.001">
 	</body>
 </html>
 
