@@ -66,8 +66,7 @@ function initialize(){
 	});
 	gridCanvas.addEventListener('mousedown', ev => {
 		coords = getMousePos(gridCanvas, ev);
-		console.log("coords: "+coords);
-		console.log(paintType);
+		console.log("coords: "+coords+" paintType: "+paintType);
 		changed = env.setSquareLogic(coords,paintType);
 		if(changed) env.draw();
 		mouseIsDown = true;
@@ -172,7 +171,7 @@ function initialize(){
 		alpha = this.value;
 		console.log("alpha set to: "+alpha);
 	}
-	alphaSlider.value = 0.1;
+	alphaSlider.onclick();
 
 	//	 Half baked environment sim
 	function agentUp(){agentLocation[1]-=1; return 0}
@@ -277,7 +276,6 @@ function initialize(){
 		}
 	}
 	env.setSquareLogic = function(coord, type){
-		console.log("ohayo!");
 		x = coord[0];
 		y = coord[1];
 		changingFromType = this.stateActions[x][y][0];
@@ -288,7 +286,6 @@ function initialize(){
 		if(changingFromType == 1) this.goals.del(coord);
 		if(changingFromType == 2) this.blocks.del(coord);
 		this.stateActions[x][y][0] = type;
-		console.log(x,y,changingFromType,type);
 		this.resetSquare(coord);// this will make the logic agree with the type we just set.
 		if( changingFromType == 2 || type == 2){
 			if(y>0) this.resetSquare([x,y-1]);
@@ -324,7 +321,6 @@ function initialize(){
 
 		max = probs.reduce((a,b)=> a>b?a:b);
 		probs = probs.map(x => max + 0.000001 - x);// <-- This parameter is important
-		//probs.map(x=> console.log(x==0));divide by zero check.
 		probs = probs.map(x => 1 / x);
 
 		//min = probs.reduce((a,b)=>a>b?b:a);
