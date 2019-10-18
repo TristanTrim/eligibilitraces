@@ -16,8 +16,8 @@ var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 			// that influinced current reward... Thats a mouthful.
 var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
-var exploration = 0.5;  // also made up by me. This is the amount to add to all value estimates every 100 steps.
-var explorationInterval = 100000
+var exploration = 0.001;  // also made up by me. This is the amount to add to all value estimates every 100 steps.
+var explorationInterval = 100
 
 var stepsBetweenDraw = 10;
 var delayBetweenSteps = 0;
@@ -35,6 +35,7 @@ var nActions;
 var policy;
 
 var paintType = 2;
+var paintTypeBuf = 2;
 var mouseIsDown = false;
 
 var imgTailLength = 200;
@@ -54,23 +55,34 @@ function initialize(){
 	    return([Math.floor((evt.clientX - rect.left)/pixWidth),
 	       Math.floor((evt.clientY - rect.top)/pixHeight)]);
 	}
-	gridCanvas.addEventListener('mousemove', ev => {
+	function mousemove(ev){
 		if(mouseIsDown){
-			coords = getMousePos(gridCanvas, ev);
-			changed = env.setSquareLogic(coords,paintType);
+			coords = getMousePos(ev.target, ev);
+			changed = env.setSquareLogic(coords,paintTypeBuf);
 			if(changed) env.draw();
 		}
-	});
-	gridCanvas.addEventListener('mouseup', ev => {
+	}
+	gridCanvas.addEventListener('mousemove', ev => mousemove(ev));
+	valueCanvas.addEventListener('mousemove', ev => mousemove(ev));
+	function mouseup(ev){
 		mouseIsDown = false;
-	});
-	gridCanvas.addEventListener('mousedown', ev => {
-		coords = getMousePos(gridCanvas, ev);
+	}
+	gridCanvas.addEventListener('mouseup', ev => mouseup(ev));
+	valueCanvas.addEventListener('mouseup', ev => mouseup(ev));
+	function mousedown(ev){
+		coords = getMousePos(ev.target, ev);
 		console.log("coords: "+coords+" paintType: "+paintType);
-		changed = env.setSquareLogic(coords,paintType);
+		if(env.stateActions[coords[0]][coords[1]][0] == paintType){
+			paintTypeBuf = 0;
+		}else{
+			paintTypeBuf = paintType;
+		}
+		changed = env.setSquareLogic(coords,paintTypeBuf);
 		if(changed) env.draw();
 		mouseIsDown = true;
-	});
+	}
+	gridCanvas.addEventListener('mousedown', ev => mousedown(ev));
+	valueCanvas.addEventListener('mousedown', ev => mousedown(ev));
 
 	//styling in js cause I am the worst.
 	valueCanvas.style.borderStyle = "solid"; 
@@ -310,8 +322,8 @@ function initialize(){
 	env.toggleGoal([xPix-2,yPix-5]);// these are good goal locations. Don't tell the agent where they are.
 	// add some blocks to make it tricky.
 	for(i = 1; i<yPix-1; i++){
-		env.toggleBlock([10,i]);
-		if (i == 10) i++;
+		env.toggleBlock([Math.floor(xPix/2),i]);
+		if (i == Math.floor(yPix/3)) i++;
 	}
 
 
@@ -417,6 +429,8 @@ function initialize(){
 			// I thought "Oh, the dynamics of the environment are simple and state values will visualize better!"
 			// (read in high pitch mocking voice) But no. I was a fool!
 			if(oldX==newX && oldY==newY){
+				removeFromEQ(agent.eligibilityQueue,[oldX,oldY]);
+				agent.eligibilityQueue.push([oldX,oldY]);
 				removeFromEQ(agent.eligibilityQueue,[predictedX,predictedY]);
 				agent.eligibilityQueue.push([predictedX,predictedY]);
 			}else{
@@ -450,7 +464,9 @@ function initialize(){
 	// Main loop! Get outta here async programming!
 	function continueLogic() {
 		stepcount++;
-		if(stepcount%explorationInterval==0) valueFunction = valueFunction.map(x => x.map(y => y+exploration));
+		if(stepcount%explorationInterval==0){
+			valueFunction = valueFunction.map(x => x.map(y => y+exploration));
+		}
 		env.draw();
 		logicUpdate();
 		if(running) setTimeout(continueLogic, delayBetweenSteps);
