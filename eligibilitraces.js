@@ -40,7 +40,7 @@ var mouseIsDown = false;
 
 var imgTailLength = 200;
 var logicTailLength = 20;
-
+function setPaintType(type){paintType=type}
 
 function initialize(){
 	// canvas setup
@@ -58,8 +58,17 @@ function initialize(){
 	function mousemove(ev){
 		if(mouseIsDown){
 			coords = getMousePos(ev.target, ev);
-			changed = env.setSquareLogic(coords,paintTypeBuf);
-			if(changed) env.draw();
+			if(paintType<3){
+				changed = env.setSquareLogic(coords,paintTypeBuf);
+				if(changed) env.draw();
+			}else{
+				if(paintType==3){
+					valueFunction[coords[0]][coords[1]]+=0.1;
+				}else if(paintType==4){
+					valueFunction[coords[0]][coords[1]]*=0.99;
+				}
+				env.draw();
+			}
 		}
 	}
 	gridCanvas.addEventListener('mousemove', ev => mousemove(ev));
@@ -77,8 +86,17 @@ function initialize(){
 		}else{
 			paintTypeBuf = paintType;
 		}
-		changed = env.setSquareLogic(coords,paintTypeBuf);
-		if(changed) env.draw();
+		if(paintType<3){
+			changed = env.setSquareLogic(coords,paintTypeBuf);
+			if(changed) env.draw();
+		}else{
+			if(paintType==3){
+				valueFunction[coords[0]][coords[1]]+=0.1;
+			}else if(paintType==4){
+				valueFunction[coords[0]][coords[1]]*=0.99;
+			}
+			env.draw();
+		}
 		mouseIsDown = true;
 	}
 	gridCanvas.addEventListener('mousedown', ev => mousedown(ev));
