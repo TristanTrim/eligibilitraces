@@ -32,6 +32,7 @@ var nActions;
 var policy;
 
 var paintType = 2;
+var mouseIsDown = false;
 
 var imgTailLength = 200;
 var logicTailLength = 20;
@@ -50,16 +51,24 @@ function initialize(){
 	    return([Math.floor((evt.clientX - rect.left)/pixWidth),
 	       Math.floor((evt.clientY - rect.top)/pixHeight)]);
 	}
-	gridCanvas.onclick = function(ev){
+	gridCanvas.addEventListener('mousemove', ev => {
+		if(mouseIsDown){
+			coords = getMousePos(gridCanvas, ev);
+			changed = env.setSquareLogic(coords,paintType);
+			if(changed) env.draw();
+		}
+	});
+	gridCanvas.addEventListener('mouseup', ev => {
+		mouseIsDown = false;
+	});
+	gridCanvas.addEventListener('mousedown', ev => {
 		coords = getMousePos(gridCanvas, ev);
 		console.log("coords: "+coords);
-		if(paintType == 1){
-			env.toggleGoal(coords);
-		}if(paintType == 2){
-			env.toggleBlock(coords);
-		}
-
-	};
+		console.log(paintType);
+		changed = env.setSquareLogic(coords,paintType);
+		if(changed) env.draw();
+		mouseIsDown = true;
+	});
 
 	//styling in js cause I am the worst.
 	valueCanvas.style.borderStyle = "solid"; 
@@ -136,10 +145,10 @@ function initialize(){
 	function agentNull(){return 0}
 	function agentWin(){ agentLocation = [0,0]; return 1;
 	}
-	env = {}
 
 	// basic gridworld
-	//
+	env = {}
+	env.draw = function(){};
 	// stateActions are in an Array with the shape:
 	// stateActions[x][y][square type, [actions]]
 	// where the x,y are the coordinates,
@@ -194,10 +203,12 @@ function initialize(){
 		rsy = coord[1];
 		type = this.stateActions[rsx][rsy][0];
 		if(type == 0){// Normal square
+			//default actions
 			env.stateActions[rsx][rsy][1][0] = agentUp;
 			env.stateActions[rsx][rsy][1][1] = agentRight;
 			env.stateActions[rsx][rsy][1][2] = agentDown;
 			env.stateActions[rsx][rsy][1][3] = agentLeft;
+			// effect from blocks and edge of gridworld
 			// up right down left
 			if(rsy==0 || env.stateActions[rsx][rsy-1][0] == 2){//up is blocked
 				env.stateActions[rsx][rsy][1][0] = agentNull;
@@ -217,6 +228,7 @@ function initialize(){
 			env.stateActions[rsx][rsy][1][2] = agentWin;
 			env.stateActions[rsx][rsy][1][3] = agentWin;
 		}else if(type == 2){// Blocking square
+			console.log("was block");
 			env.stateActions[rsx][rsy][1][0] = agentUp;
 			env.stateActions[rsx][rsy][1][1] = agentRight;
 			env.stateActions[rsx][rsy][1][2] = agentDown;
@@ -224,11 +236,20 @@ function initialize(){
 		}
 	}
 	env.setSquareLogic = function(coord, type){
+		console.log("ohayo!");
 		x = coord[0];
 		y = coord[1];
 		changingFromType = this.stateActions[x][y][0];
-		if(changingFromType == type) return;
+		if(changingFromType == type) return false;
+
+		if(type == 1) this.goals.add(coord);
+		else if(type ==2) this.blocks.add(coord);
+		else if(type == 0){
+			if(changingFromType == 1) this.goals.del(coord);
+			if(changingFromType == 2) this.blocks.del(coord);
+		}
 		this.stateActions[x][y][0] = type;
+		console.log(x,y,changingFromType,type);
 		this.resetSquare(coord);// this will make the logic agree with the type we just set.
 		if( changingFromType == 2 || type == 2){
 			if(y>0) this.resetSquare([x,y-1]);
@@ -236,25 +257,16 @@ function initialize(){
 			if(y<yPix-1) this.resetSquare([x,y+1]);
 			if(x>0) this.resetSquare([x-1,y]);
 		}
+		return true;
 	}
 
 	env.toggleGoal = function(coord){
-		if(this.goals.del(coord)){// we're removing a goal
-			this.setSquareLogic(coord, 0);
-		}else{		// we're adding a goal
-			this.goals.add(coord);
-			this.setSquareLogic(coord, 1);
-		}
-		draw()
+		if(this.stateActions[coord[0]][coord[1]] == 1) this.setSquareLogic(coord, 0);
+		else this.setSquareLogic(coord, 1);
 	}
 	env.toggleBlock = function(coord){
-		if(this.blocks.del(coord)){// we're removing a block
-			this.setSquareLogic(coord, 0);
-		}else{		// we're adding a block
-			this.blocks.add(coord);
-			this.setSquareLogic(coord, 2);
-		}
-		draw()
+		if(this.stateActions[coord[0]][coord[1]] == 2) this.setSquareLogic(coord, 0);
+		else this.setSquareLogic(coord, 2);
 	}
 
 		
@@ -287,7 +299,7 @@ function initialize(){
 	
 
 	//
-	function draw() {
+	env.draw = function() {
 		// Clear screen for drawing next frame.
 		gridContext.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
 		valueContext.clearRect(0, 0, valueCanvas.width, valueCanvas.height);
@@ -397,11 +409,12 @@ function initialize(){
 	// Main loop! Get outta here async programming!
 	function continueLogic() {
 		stepcount++;
-		draw();
+		if(stepcount%100==0) valueFunction = valueFunction.map(x => x.map(y => y+0.0001));
+		env.draw();
 		logicUpdate();
 		if(running) setTimeout(continueLogic, delayBetweenSteps);
 	}
-	draw();
+	env.draw();
 	//continueLogic();
 }
 
