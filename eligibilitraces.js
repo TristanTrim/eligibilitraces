@@ -17,8 +17,8 @@ var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
 var exploration = 0.001;  // also made up by me. This is the amount to add to all value estimates every 100 steps.
-var explorationInterval = 100
-
+var explorationInterval = 100;
+var perfectionism = 0.000001;
 var stepsBetweenDraw = 10;
 var delayBetweenSteps = 0;
 var _skinnerbox = 1;
@@ -199,12 +199,49 @@ function initialize(){
 		console.log("alpha set to: "+alpha);
 	}
 	alphaSlider.onclick();
+
 	gammaSlider = document.getElementById("Gamma");
 	gammaSlider.onclick = function(){
 		gamma = this.value;
 		console.log("gamma set to: "+gamma);
 	}
 	gammaSlider.onclick();
+
+	lambdaSlider = document.getElementById("Lambda");
+	lambdaSlider.onclick = function(){
+		lambda = this.value;
+		console.log("lambda set to: "+lambda);
+	}
+	lambdaSlider.onclick();
+
+	jadednessSlider = document.getElementById("Jaded");
+	jadednessSlider.onclick = function(){
+		jadedness = this.value;
+		console.log("jadedness set to: "+jadedness);
+	}
+	jadednessSlider.onclick();
+
+	explorationSlider = document.getElementById("Exploration");
+	explorationSlider.onclick = function(){
+		exploration = this.value;
+		console.log("exploration set to: "+exploration);
+	}
+	explorationSlider.onclick();
+
+	explorationIntervalSlider = document.getElementById("ExplorationStep");
+	explorationIntervalSlider.onclick = function(){
+		explorationInterval = this.value;
+		console.log("explorationInterval set to: "+explorationInterval);
+	}
+	explorationIntervalSlider.onclick();
+
+	perfectionismSlider = document.getElementById("Perfectionism");
+	perfectionismSlider.onclick = function(){
+		perfectionism = this.value;
+		console.log("perfectionism set to: "+perfectionism);
+	}
+	perfectionismSlider.onclick();
+
 
 	//	 Half baked environment sim
 	function agentUp(){agentLocation[1]-=1; return 0}
@@ -353,7 +390,7 @@ function initialize(){
 		//probs = probs.map(x => Math.pow(x,10)); // power is heavy
 
 		max = probs.reduce((a,b)=> a>b?a:b);
-		probs = probs.map(x => max + 0.000001 - x);// <-- This parameter is important
+		probs = probs.map(x => max + perfectionism - x);// <-- This parameter is important
 		probs = probs.map(x => 1 / x);
 
 		//min = probs.reduce((a,b)=>a>b?b:a);
@@ -426,6 +463,9 @@ function initialize(){
 	}
 	function logicUpdate() {
 		for(ii=0;ii<stepsBetweenDraw + _skinnerbox*stepsBetweenDraw*Math.random();ii++) {
+			if(stepcount%explorationInterval==0){
+				//valueFunction = valueFunction.map(x => x.map(y => y+exploration));
+			}
 			oldX=agentLocation[0];
 			oldY=agentLocation[1];
 
@@ -485,9 +525,6 @@ function initialize(){
 	// Main loop! Get outta here async programming!
 	function continueLogic() {
 		stepcount++;
-		if(stepcount%explorationInterval==0){
-			valueFunction = valueFunction.map(x => x.map(y => y+exploration));
-		}
 		env.draw();
 		logicUpdate();
 		if(running) setTimeout(continueLogic, delayBetweenSteps);

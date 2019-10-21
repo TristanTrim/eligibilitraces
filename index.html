@@ -7,6 +7,7 @@
 		<script src="eligibilitraces.js"></script>
 	</head>
 	<body style="background:#fdf6e3">
+		<hr>
 		<span>
 			Value:
 			<canvas style="background:#002b36; vertical-align: top" id="valueCanvas">
@@ -15,7 +16,7 @@
 			GridWorld:
 			<canvas style="background:#002b36; vertical-align: top" id="gridWorldCanvas">
 		</span>
-		<br>
+		<hr>
 		<span>
 			|
 			<a href="javascript:toggle();">start/stop</a>
@@ -36,7 +37,23 @@
 		<input id="Alpha" type="range" name="points" min="0" max="1" step="0.01" value="0.1">
 		<br>
 		Gamma:
-		<input id="Gamma" type="range" name="points" min=".95" max="1" step="0.001">
+		<input id="Gamma" type="range" name="points" min=".95" max="1" step="0.001" value=".99">
+		<br>
+		Lambda:
+		<input id="Lambda" type="range" name="points" min=".9" max="1" step="0.001" value=".95">
+		<br>
+		Jaded:
+		<input id="Jaded" type="range" name="points" min="0" max=".2" step="0.0001" value=".0001">
+		<br>
+		Exploration:
+		<input id="Exploration" type="range" name="points" min="0" max=".2" step="0.001" value="0.001">
+		<br>
+		Exploration step:
+		<input id="ExplorationStep" type="range" name="points" min="0" max="1000" step="1" value="100">
+		<br>
+		Perfectionism:
+		<input id="Perfectionism" type="range" name="points" min="0.0000001" max="0.0000008" step="0.0000001" value=".0000007">
+
 	</body>
 </html>
 
