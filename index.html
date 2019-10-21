@@ -22,7 +22,7 @@
 			<a href="javascript:toggle();">start/stop</a>
 			<a href="javascript:initialize();"> reset </a>
 			| | Draw: 
-			<a style="color:#aaa" href="javascript:setPaintType(0);"> normal </a>
+			<a style="color:#aaa" href="javascript:setPaintType(0);"> erase </a>
 			<a style="color:#090" href="javascript:setPaintType(1);"> goal </a>
 			<a style="color:#555" href="javascript:setPaintType(2);"> block </a>
 			<a style="color:#0bb" href="javascript:setPaintType(3);"> value </a>
@@ -48,6 +48,34 @@
 		<a href="javascript:initializeParams();"> reset </a>
 		|
 		<hr>
+		<br>
+		Explanation:
+		This is a visual exploration of reinforcement learning. On the right you can see "gridworld". Living in gridworld is our agent, the orange dot. The orange dot's goal is to get to a green dot, where it is rewarded and sent back to the origin. You may draw onto gridworld, adding or erasing green dot goals, or grey dots that block the agent, making it's journey more difficult, but probably also more rewarding in some philosophical sense. In the mathimatical sense, though, it is strictly less rewarding...
+		<br>
+		<br>
+		On the left you see the agents value function. This is it's internal sense of the world. On every time step it will choose to move to a new square, favoring the bluer ones. The blueness is a representation of how likely the agent thinks it is that a given square will lead it to a green dot.
+		<br>
+		<br>
+		As the agent travels it updates its estimate of how blue a square should be based on whether or not it really does get to a green dot. The way it updates is based on a bunch of math and code you can check out on github, or read about in the textbook linked below, but I will provide a brief explanation.
+		<br>
+		<br>
+		Alpha is how quickly the agent will jump to conclusions about squares. If it finds a good path it will learn to take it much faster with a high alpha, but it may write off paths that actually are quite good because it happens to take a wrong turn just before getting to a goal.
+		<br>
+		<br>
+		Gamma is kinda like the agents account of <a href="https://en.wikipedia.org/wiki/Murphy%27s_law">murphys law</a>. It is the amount of value the agent is willing to move back from one square to the previous. If it is too low the agent will not find a path to its goal. Too high and it will give too much value to the first path it finds that works.
+		<br>
+		<br>
+		Lambda is in a sense how far back the agent remembers and updates the value of squares. As with the other parameters it must be tuned correctly. Too high and the agent will remember parts of it's travel that didn't really lead it to the goal, too low and it will have a hard time remembering the path as it comes around again.
+		<br>
+		<br>
+		This program is based on the concepts from
+		<a href="http://incompleteideas.net/book/the-book-2nd.html">
+			Reinforcement Learning by Richard S. Sutton and Andrew G. Barto
+		</a>.
+		and is mostly based on the Sarsa lambda algorithm, except that it follows a v value function instead of a q value function. I chose to do this because I wanted the display of the grid to be clean and easy to understand, but if I was to write it again I would do so with a q value function and either map the action values onto a single state, or draw them as portions of the individual squares.
+		<br>
+		<br>
+		I hope you have enjoyed. If you have any questions or comments, please do not hesitate to reach out over <a href="https://github.com/TristanTrim/eligibilitraces/issues/new">on github</a>. (Especially if you review my code or even just want to shame me for my lack of comments and messy structure)
 	</body>
 </html>
 
