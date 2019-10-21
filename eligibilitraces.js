@@ -211,7 +211,7 @@ function initialize(){
 	lambdaSlider = document.getElementById("Lambda");
 	lambdaSlider.onclick = function(){
 		lambda = this.value;
-		console.log("lambda set to: "+gamma);
+		console.log("lambda set to: "+lambda);
 		env.draw()
 	}
 	lambdaSlider.onclick();
@@ -512,6 +512,28 @@ function initialize(){
 	//continueLogic();
 }
 
+function initializeParams(){
+	// Cider Sliders! lol jk, they are html sliders!
+	simSpeedSlider = document.getElementById("SimSpeed");
+	simSpeedSlider.value = 30;
+	simSpeedSlider.onclick();
+
+	alphaSlider = document.getElementById("Alpha");
+	alphaSlider.value=0.2;
+	alphaSlider.onclick();
+
+	gammaSlider = document.getElementById("Gamma");
+	gammaSlider.value = 0.99;
+	gammaSlider.onclick();
+
+	lambdaSlider = document.getElementById("Lambda");
+	lambdaSlider.value = 0.9;
+	lambdaSlider.onclick();
+}
+
 //document.addEventListener("load", initialize);// I don't work.
 //document.onload = initialize;// I don't work
-window.onload = initialize; // I work!!!
+window.onload = function(){
+	initialize();
+	initializeParams();
+}; // I work!!!
