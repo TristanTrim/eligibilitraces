@@ -26,7 +26,8 @@ var skinnerbox = 1;
 var toggle;
 var running = false;
 var agent;
-var env;
+var env = {};
+env.draw = function(){};
 var valueFunction;
 
 var stepcount;
@@ -198,12 +199,22 @@ function initialize(){
 		console.log("alpha set to: "+alpha);
 	}
 	alphaSlider.onclick();
+
 	gammaSlider = document.getElementById("Gamma");
 	gammaSlider.onclick = function(){
 		gamma = this.value;
 		console.log("gamma set to: "+gamma);
+		env.draw();
 	}
 	gammaSlider.onclick();
+
+	lambdaSlider = document.getElementById("Lambda");
+	lambdaSlider.onclick = function(){
+		lambda = this.value;
+		console.log("lambda set to: "+gamma);
+		env.draw()
+	}
+	lambdaSlider.onclick();
 
 	//	 Half baked environment sim
 	function agentUp(){agentLocation[1]-=1; return 0}
@@ -215,8 +226,6 @@ function initialize(){
 	}
 
 	// basic gridworld
-	env = {}
-	env.draw = function(){};
 	// stateActions are in an Array with the shape:
 	// stateActions[x][y][square type, [actions]]
 	// where the x,y are the coordinates,
@@ -495,8 +504,8 @@ function initialize(){
 		if(stepcount%explorationInterval==0){
 			valueFunction = valueFunction.map(x => x.map(y => y+exploration));
 		}
-		env.draw();
 		logicUpdate();
+		env.draw();
 		if(running) setTimeout(continueLogic, delayBetweenSteps);
 	}
 	env.draw();
