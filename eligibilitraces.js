@@ -38,7 +38,7 @@ var paintType = 2;
 var paintTypeBuf = 2;
 var mouseIsDown = false;
 
-var imgTailLength = 200;
+var imgTailLength = 300;
 var logicTailLength = 20;
 function setPaintType(type){paintType=type}
 
@@ -370,23 +370,6 @@ function initialize(){
 		// Clear screen for drawing next frame.
 		gridContext.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
 		valueContext.clearRect(0, 0, valueCanvas.width, valueCanvas.height);
-		// Draw agent
-		gridContext.fillStyle="#d51"
-		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
-		// Draw goals
-		gridContext.fillStyle="#8a0"
-		for(ii=0;ii<env.goals.array.length;ii++){
-			x = env.goals.array[ii][0];
-			y = env.goals.array[ii][1];
-			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
-		}
-		// Draw blocks
-		gridContext.fillStyle="#688"
-		for(ii=0;ii<env.blocks.array.length;ii++){
-			x = env.blocks.array[ii][0];
-			y = env.blocks.array[ii][1];
-			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
-		}
 
 		// Draw valueFunction
 		for (x=0;x<xPix;x++){
@@ -402,17 +385,42 @@ function initialize(){
 			}
 		}
 		// Draw eligibilityQueue
+		eligibilityForColor = 1;
 		for (ii=agent.eligibilityQueue.length-1; ii>=0; ii--){
 			x = agent.eligibilityQueue[ii][0];
 			y = agent.eligibilityQueue[ii][1];
 			valueContext.fillStyle = 
 				`rgba(
-					255,255,255,
-					${.1+ii/agent.eligibilityQueue.length/2}
+					255, 255, 180,
+					${eligibilityForColor}
 				)`;
 			valueContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
+			eligibilityForColor = gamma * lambda * eligibilityForColor;
+			gridContext.fillStyle = 
+				`rgba(
+					203, 76, 22,
+					${ii/agent.eligibilityQueue.length*.8}
+				)`;
+			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
 		}
+		// Draw agent
+		gridContext.fillStyle="#d51"
+		gridContext.fillRect(agentLocation[0]*pixWidth, agentLocation[1]*pixHeight, pixWidth, pixHeight);
 
+		// Draw goals
+		gridContext.fillStyle="#8a0"
+		for(ii=0;ii<env.goals.array.length;ii++){
+			x = env.goals.array[ii][0];
+			y = env.goals.array[ii][1];
+			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
+		}
+		// Draw blocks
+		gridContext.fillStyle="#688"
+		for(ii=0;ii<env.blocks.array.length;ii++){
+			x = env.blocks.array[ii][0];
+			y = env.blocks.array[ii][1];
+			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
+		}
 	}
 	function removeFromEQ(array,coord){
 		// remove old eligibilities of state if already in eligibilityQueue
