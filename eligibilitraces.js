@@ -21,18 +21,19 @@ var explorationInterval = 100
 
 var stepsBetweenDraw = 10;
 var delayBetweenSteps = 0;
-var skinnerbox = 1;
+var _skinnerbox = 1;
 
 var toggle;
 var running = false;
+
 var agent;
+var agentLocation;
+var policy;
 var env;
+var nActions;
 var valueFunction;
 
 var stepcount;
-var agentLocation;
-var nActions;
-var policy;
 
 var paintType = 2;
 var paintTypeBuf = 2;
@@ -180,11 +181,11 @@ function initialize(){
 	simSpeedSlider = document.getElementById("SimSpeed");
 	simSpeedSlider.onclick = function(){
 		if (this.value > 50){
-			skinnerbox = 1;
+			_skinnerbox = 1;
 			delayBetweenSteps = 0;
 			stepsBetweenDraw = 0.1*(this.value-50)*(this.value-50);
 		}else{
-			skinnerbox = 0;
+			_skinnerbox = 0;
 			stepsBetweenDraw = 1;
 			delayBetweenSteps = 3*(50 - this.value);
 		}
@@ -424,7 +425,7 @@ function initialize(){
 		}
 	}
 	function logicUpdate() {
-		for(ii=0;ii<stepsBetweenDraw + skinnerbox*stepsBetweenDraw*Math.random();ii++) {
+		for(ii=0;ii<stepsBetweenDraw + _skinnerbox*stepsBetweenDraw*Math.random();ii++) {
 			oldX=agentLocation[0];
 			oldY=agentLocation[1];
 
