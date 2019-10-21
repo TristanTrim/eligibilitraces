@@ -49,7 +49,6 @@
 		|
 		<hr>
 		<br>
-		Explanation:
 		This is a visual exploration of reinforcement learning. On the right you can see "gridworld". Living in gridworld is our agent, the orange dot. The orange dot's goal is to get to a green dot, where it is rewarded and sent back to the origin. You may draw onto gridworld, adding or erasing green dot goals, or grey dots that block the agent, making it's journey more difficult, but probably also more rewarding in some philosophical sense. In the mathimatical sense, though, it is strictly less rewarding...
 		<br>
 		<br>
@@ -66,6 +65,9 @@
 		<br>
 		<br>
 		Lambda is in a sense how far back the agent remembers and updates the value of squares. As with the other parameters it must be tuned correctly. Too high and the agent will remember parts of it's travel that didn't really lead it to the goal, too low and it will have a hard time remembering the path as it comes around again.
+		<br>
+		<br>
+		The trail on the gridworld is just a visualization to help you see where the agent is traveling more easily, but on the value function the trail is a visualization of the combined effects of lambda and gamma. As you modify those values you will see it get longer and shorter.
 		<br>
 		<br>
 		This program is based on the concepts from
