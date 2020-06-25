@@ -64,13 +64,13 @@
 		Alpha is how quickly the agent will jump to conclusions about squares. If it finds a good path it will learn to take it much faster with a high alpha, but it may write off paths that actually are quite good because it happens to take a wrong turn just before getting to a goal.
 		<br>
 		<br>
-		Gamma is kinda like the agents account of <a href="https://en.wikipedia.org/wiki/Murphy%27s_law">murphys law</a>. It is the amount of value the agent is willing to move back from one square to the previous. If it is too low the agent will not find a path to its goal. Too high and it will give too much value to the first path it finds that works.
+		Gamma is kinda like the agents account of <a href="https://en.wikipedia.org/wiki/Murphy%27s_law">murphys law</a>. It is the amount of value the agent is willing to move back from one square to the previous, IE how much it thinks it's current reward (whether it got to the goal or not) is caused by each of the previous squares it visited. If it is too low the agent will not find a path to its goal. Too high and it will give too much value to the first path it finds that works.
 		<br>
 		<br>
-		Lambda is in a sense how far back the agent remembers and updates the value of squares. As with the other parameters it must be tuned correctly. Too high and the agent will remember parts of it's travel that didn't really lead it to the goal, too low and it will have a hard time remembering the path as it comes around again.
+		Lambda is, in a sense, how far back the agent remembers and updates the value of squares. As with the other parameters it must be tuned correctly. Too high and the agent will remember parts of it's travel that didn't really lead it to the goal, too low and it will have a hard time remembering the path as it comes around again.
 		<br>
 		<br>
-		The trail on the gridworld is just a visualization to help you see where the agent is traveling more easily, but on the value function the trail is a visualization of the combined effects of lambda and gamma. As you modify those values you will see it get longer and shorter.
+		The trail on the gridworld is just a visualization to help you see where the agent is traveling more easily, but on the value function the trail is a visualization of the combined effects of lambda and gamma. As you modify those values you will see it get longer or shorter.
 		<br>
 		<br>
 		This program is based on the concepts from
