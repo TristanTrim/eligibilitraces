@@ -16,7 +16,7 @@ var lambda = 0.95; // lam' is ml for decay rate of states eligibility as action
 			// that influinced current reward... Thats a mouthful.
 var jadedness = 0.0001; // jadedness is the amount the agent needs to be surprised before it will update value functions
 				// I made this up. It's not a real ml thing.
-var exploration = 0.001;  // also made up by me. This is the amount to add to all value estimates every 100 steps.
+var exploration = 0.001;  // also made up by me. This is the amount to add to all value estimates every so many steps.
 var explorationInterval = 100
 
 var stepsBetweenDraw = 10;
@@ -351,7 +351,7 @@ function initialize(){
 	env.toggleGoal([xPix-2,yPix-5]);// these are good goal locations. Don't tell the agent where they are.
 	// add some blocks to make it tricky.
 	for(i = 1; i<yPix-1; i++){
-		env.toggleBlock([Math.floor(xPix/2),i]);
+		env.toggleBlock([Math.floor((i*xPix)/(3*yPix)+xPix/3),i]);
 		if (i == Math.floor(yPix/3)) i++;
 	}
 
@@ -512,6 +512,8 @@ function initialize(){
 	//continueLogic();
 }
 
+
+
 function initializeParams(){
 	// Cider Sliders! lol jk, they are html sliders!
 	simSpeedSlider = document.getElementById("SimSpeed");
@@ -530,6 +532,8 @@ function initializeParams(){
 	lambdaSlider.value = 0.9;
 	lambdaSlider.onclick();
 }
+
+
 
 //document.addEventListener("load", initialize);// I don't work.
 //document.onload = initialize;// I don't work
