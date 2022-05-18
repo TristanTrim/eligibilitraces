@@ -279,6 +279,9 @@ function initialize(){
 	}
 	env.goals = new coordSet();// don't touch
 	env.blocks = new coordSet();// hands off!
+	// modify the actions of the squares around this square
+	// to accord with the current type of the square
+	// eg, trying to move onto a block leaves you in the same place
 	env.resetSquare = function(coord){
 		rsx = coord[0];
 		rsy = coord[1];
@@ -356,6 +359,7 @@ function initialize(){
 	}
 
 
+	// TODO: move this up with the agent
 	function probabilityNormalizer(probs){
 
 		//probs = probs.map(x => Math.pow(x,10)); // power is heavy
@@ -431,6 +435,7 @@ function initialize(){
 			gridContext.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
 		}
 	}
+	//TODO: part of agent?
 	function removeFromEQ(array,coord){
 		// remove old eligibilities of state if already in eligibilityQueue
 		for(jj=array.length-1; jj>=0; jj--){
@@ -440,6 +445,7 @@ function initialize(){
 			}
 		}
 	}
+	//TODO: part of agent?
 	function logicUpdate() {
 		for(ii=0;ii<stepsBetweenDraw + skinnerbox*stepsBetweenDraw*Math.random();ii++) {
 			oldX=agentLocation[0];
